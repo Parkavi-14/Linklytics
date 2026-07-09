@@ -1,141 +1,108 @@
-const User=require("../models/User");
-const bcrypt=require("bcrypt");
-const validator=require("validator");
-const generateToken=require("../utils/generateToken");
+const User = require("../models/User");
+const Url = require("../models/Url");
+const bcrypt = require("bcrypt");
+const validator = require("validator");
+const generateToken = require("../utils/generateToken");
 
-exports.signup=async(req,res)=>{
+exports.signup = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-try{
-
-    const{name,email,password}=req.body;
-
-if(!name || !email || !password){
-
-    return res.status(400).json({
-    success:false,
-    message:"All fields are required"
-});
-
-}
-
-if(!validator.isEmail(email)){
-
-    return res.status(400).json({
-    success:false,
-    message:"Invalid Email"
-    });
-
-}
-
-const exists=await User.findOne({email});
-
-if(exists){
-
-    return res.status(400).json({
-
-        success:false,
-        message:"Email already exists"
-
-    });
-
-}
-
-const hashedPassword=await bcrypt.hash(password,10);
-
-const user=await User.create({
-
-    name,
-    email,
-    password:hashedPassword
-
-});
-
-const token=generateToken(user._id);
-
-res.status(201).json({
-
-    success:true,
-    token,
-    user:{
-    id:user._id,
-    name:user.name,
-    email:user.email
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
     }
 
-});
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Email",
+      });
+    }
 
-}catch(err){
+    const exists = await User.findOne({ email });
 
-    res.status(500).json({
+    if (exists) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
 
-        success:false,
-        message:err.message
+    const hashedPassword = await bcrypt.hash(password, 10);
 
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
     });
 
-}
+    const token = generateToken(user._id);
 
-};
-exports.login=async(req,res)=>{
-
-try{
-
-    const{email,password}=req.body;
-
-    const user=await User.findOne({email});
-
-if(!user){
-
-return res.status(400).json({
-
-    success:false,
-    message:"Invalid Credentials"
-
-});
-
-}
-
-const match=await bcrypt.compare(password,user.password);
-
-if(!match){
-
-    return res.status(400).json({
-
-    success:false,
-    message:"Invalid Credentials"
-
-});
-
-}
-
-const token=generateToken(user._id);
-
-res.json({
-
-    success:true,
-
-    token,
-
-        user:{
-        id:user._id,
-        name:user.name,
-        email:user.email
-        }
-
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
-
-}catch(err){
+  } catch (err) {
+    console.error(err);
 
     res.status(500).json({
-
-    success:false,
-    message:err.message
-
-});
-
-}
-
+      success: false,
+      message: err.message,
+    });
+  }
 };
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 exports.getAnalyticsUrls = async (req, res) => {
   try {
     const urls = await Url.find({
@@ -151,6 +118,8 @@ exports.getAnalyticsUrls = async (req, res) => {
       data: urls,
     });
   } catch (err) {
+    console.error(err);
+
     res.status(500).json({
       success: false,
       message: err.message,
