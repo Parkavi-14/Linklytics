@@ -14,12 +14,13 @@ const protect = require("../middleware/authMiddleware");
 
 // Setup application routes
 
-// 1. Create a short URL (Protected)
+// 1. Create a short URL (Handles BOTH "/api/url/create" and "/api/url")
 router.post("/create", protect, createShortUrl);
+router.post("/", protect, createShortUrl); // 👈 ADDED: Fixes the "Unable to create URL" 404 error!
 
-// 2. Fetch User URLs (Handles BOTH "/api/url" and "/api/url/my-urls" to prevent frontend 404s)
+// 2. Fetch User URLs (Handles BOTH "/api/url/my-urls" and "/api/url")
 router.get("/my-urls", protect, getMyUrls);
-router.get("/", protect, getMyUrls); // 👈 Added this so hitting just "/api/url" works perfectly!
+router.get("/", protect, getMyUrls); 
 
 // 3. Update an existing URL target path (Protected)
 router.put("/update/:id", protect, updateUrl);
@@ -28,7 +29,6 @@ router.put("/update/:id", protect, updateUrl);
 router.delete("/delete/:id", protect, deleteUrl);
 
 // 5. Public dynamic routing parameter goes at the absolute bottom
-// This matches everything else, so keeping it here prevents it from blocking your other endpoints.
 router.get("/:code", redirectUrl); 
 
 module.exports = router;

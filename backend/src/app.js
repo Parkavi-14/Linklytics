@@ -10,14 +10,32 @@ const publicRoutes = require("./routes/publicRoutes");
 
 const app = express();
 
-// Pass the array directly to origin. The cors package handles the matching automatically!
+// Add all your stable production domains here
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://linklytics-self.vercel.app",
+  "https://linklytics-c3nenydrs-parkavi-sundar-s-projects.vercel.app"
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://linklytics-self.vercel.app",
-      "https://linklytics-c3nenydrs-parkavi-sundar-s-projects.vercel.app"
-    ],
+    origin: function (origin, callback) {
+      // 1. Allow internal/serverless/Postman requests with no origin
+      if (!origin) return callback(null, true);
+
+      // 2. Allow if it matches our explicitly listed stable domains
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // 3. ✨ DYNAMIC FIX: Handled hyphen string check safely
+      if (origin.endsWith(".vercel.app") && origin.includes("parkavi-sundar")) { // 👈 Fixed underscore to hyphen
+        return callback(null, true);
+      }
+
+      console.log("Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
