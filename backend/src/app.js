@@ -10,49 +10,27 @@ const publicRoutes = require("./routes/publicRoutes");
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.CLIENT_URI,
-];
-
+// Pass the array directly to origin. The cors package handles the matching automatically!
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests without an origin, such as Postman
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      console.log("Blocked by CORS:", origin);
-      return callback(new Error("Not allowed by CORS"));
-    },
-
+    origin: [
+      "http://localhost:5173",
+      "https://linklytics-self.vercel.app",
+      "https://linklytics-c3nenydrs-parkavi-sundar-s-projects.vercel.app"
+    ],
     credentials: true,
-
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
-
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   })
 );
 
+// Make sure body parsers are below CORS
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/url", urlRoutes);
 app.use("/api/analytics", analyticsRoutes);
@@ -61,14 +39,7 @@ app.use("/api/public", publicRoutes);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Linklytics Backend Running",
-  });
-});
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route Not Found",
+    message: "Linklytics Backend Running Successfully",
   });
 });
 
