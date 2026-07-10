@@ -10,7 +10,7 @@ const {
 } = require("../controllers/urlController");
 
 // Import protect directly since it uses module.exports = protect
-const protect = require("../middlewares/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
 // Setup application routes
 router.post("/create", protect, createShortUrl);

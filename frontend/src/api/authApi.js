@@ -12,3 +12,12 @@ export const registerUser = async (data) => {
     throw err;
   }
 };
+// Add this missing export:
+export const forgotPassword = async (emailData) => {
+  try {
+    const response = await API.post("/auth/forgot-password", emailData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
