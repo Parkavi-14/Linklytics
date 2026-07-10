@@ -11,7 +11,7 @@ const {
 } = require("../controllers/urlController");
 
 // 2. Import authentication middleware safely
-const authMiddleware = require("../middlewares/authMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 
 // Handle both standard default exports (module.exports = protect) 
 // and named object exports (module.exports = { protect })
