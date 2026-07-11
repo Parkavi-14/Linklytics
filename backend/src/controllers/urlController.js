@@ -1,6 +1,3 @@
-// ==========================================
-// 1. CREATE SHORT URL
-// ==========================================
 const Url = require("../models/Url");
 const Visit = require("../models/Visit");
 const validator = require("validator");
@@ -64,6 +61,8 @@ exports.createShortUrl = async (req, res) => {
     });
   }
 };
+
+// Rest of your urlController code (getMyUrls, deleteUrl, redirectUrl, updateUrl) stays exactly the same...
 
 // ==========================================
 // 2. GET MY URLS
