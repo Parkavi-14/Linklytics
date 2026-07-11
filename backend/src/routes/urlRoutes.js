@@ -8,33 +8,32 @@ const {
   updateUrl,
 } = require("../controllers/urlController");
 
-// Import protect directly since it uses module.exports = protect
 const protect = require("../middleware/authMiddleware");
-
-// ==========================================
-// PUBLIC ROUTES (No Authorization Required)
-// ==========================================
-
-// Public redirect route
-// Example: GET /api/url/JEx8eb2
-router.get("/:code", redirectUrl);
 
 // ==========================================
 // PROTECTED API ENDPOINTS (Token Required)
 // ==========================================
 
-// Create a short URL
+// 1. Create a short URL
 router.post("/create", protect, createShortUrl);
 router.post("/", protect, createShortUrl);
 
-// Fetch User URLs
+// 2. Fetch User URLs (Express checks this first now!)
 router.get("/my-urls", protect, getMyUrls);
 router.get("/", protect, getMyUrls);
 
-// Update an existing URL
+// 3. Update an existing URL
 router.put("/update/:id", protect, updateUrl);
 
-// Delete a short URL
+// 4. Delete a short URL
 router.delete("/delete/:id", protect, deleteUrl);
+
+// ==========================================
+// PUBLIC ROUTES (No Authorization Required)
+// ==========================================
+
+// 5. Dynamic redirect route MUST go at the absolute bottom!
+// This ensures paths like /my-urls are processed correctly first.
+router.get("/:code", redirectUrl);
 
 module.exports = router;

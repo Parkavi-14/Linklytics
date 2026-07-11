@@ -6,12 +6,26 @@ const generateShortCode = require("../utils/generateShortCode");
 // ==========================================
 // 1. CREATE SHORT URL
 // ==========================================
+const Url = require("../models/Url");
+const Visit = require("../models/Visit");
+const validator = require("validator");
+const generateShortCode = require("../utils/generateShortCode");
+
+// ==========================================
+// 1. CREATE SHORT URL (Fixed Expiry Handling)
+// ==========================================
 exports.createShortUrl = async (req, res) => {
   try {
-    let { originalUrl, customAlias } = req.body;
+    let { originalUrl, customAlias, expiryDate } = req.body;
 
     if (customAlias && customAlias.trim() === "") {
       customAlias = null;
+    }
+
+    // ✨ THE FIX: If expiryDate is empty, null, or missing, explicitly make it null 
+    // so MongoDB doesn't mark the link as expired immediately!
+    if (!expiryDate || expiryDate.trim() === "") {
+      expiryDate = null;
     }
 
     if (!validator.isURL(originalUrl)) {
@@ -34,11 +48,13 @@ exports.createShortUrl = async (req, res) => {
       });
     }
 
+    // Pass the cleaned expiryDate parameter explicitly into your creation context
     const url = await Url.create({
       user: req.user._id,
       originalUrl,
       shortCode: code,
       customAlias: customAlias || null,
+      expiryDate: expiryDate, // 👈 Ensures links stay permanent if no date chosen
     });
 
     return res.status(201).json({
