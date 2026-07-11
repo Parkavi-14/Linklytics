@@ -100,10 +100,6 @@ function Settings() {
           <div className="flex-1 max-w-[1550px] w-full mx-auto px-6 py-6 space-y-6">
             {/* Header */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-7">
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                Settings
-              </h1>
-
               <p className="text-slate-500 dark:text-slate-400 mt-2">
                 Manage your account, appearance and security settings.
               </p>
