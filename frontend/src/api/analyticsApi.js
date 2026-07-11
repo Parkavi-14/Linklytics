@@ -1,7 +1,13 @@
 import axios from "axios";
 
+// Ensure it checks the hostname dynamically so production doesn't hit localhost!
+const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const DETERMINED_BASE_URL = isLocal 
+  ? "http://localhost:5000/api" 
+  : "https://linklytics-4r2v.onrender.com/api";
+
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: DETERMINED_BASE_URL,
 });
 
 API.interceptors.request.use((config) => {
