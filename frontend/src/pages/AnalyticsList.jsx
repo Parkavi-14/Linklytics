@@ -29,6 +29,13 @@ function AnalyticsList() {
 
   // Consume the global theme context state
   const { theme } = useTheme();
+
+  // ✨ PRODUCTION URL SYNC: Maps to short link redirection paths correctly
+  const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const BASE_URL = isLocalHost
+    ? "http://localhost:5000/api/url/r"
+    : "https://linklytics-4r2v.onrender.com/api/url/r";
+
   const fetchUrls = async () => {
     try {
       setLoading(true);

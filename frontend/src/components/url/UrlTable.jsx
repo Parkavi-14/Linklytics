@@ -22,6 +22,12 @@ function UrlTable({ urls = [], refreshUrls, loading = false }) {
 
   const rowsPerPage = 10;
 
+  // ✨ DYNAMIC PRODUCTION FIX: Verifies location host context to drop localhost dependencies out of production builds
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const BACKEND_BASE_URL = isLocal 
+    ? "http://localhost:5000/api/url" 
+    : "https://linklytics-4r2v.onrender.com/api/url";
+
   const totalPages = Math.max(1, Math.ceil(urls.length / rowsPerPage));
 
   const currentUrls = useMemo(() => {
