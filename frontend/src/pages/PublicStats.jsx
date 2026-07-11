@@ -74,8 +74,11 @@ function PublicStats() {
     navigate(`/public/${inputCode.trim()}`);
   };
 
-  const BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  // ✨ PRODUCTION URL SYNC: Standardizes redirection paths dynamically across target endpoints
+  const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const REDIRECT_BASE_URL = isLocalHost
+    ? "http://localhost:5000/api/url"
+    : "https://linklytics-4r2v.onrender.com/api/url";
 
   // --- RENDERING LANDING SEARCH LOOKUP VIEW ---
   if (!shortCode) {
@@ -86,7 +89,7 @@ function PublicStats() {
           <Navbar />
           <main className="flex-1 overflow-y-auto flex flex-col bg-slate-50 dark:bg-[#020617]">
             <div className="flex-1 flex flex-col justify-center items-center px-6 py-6">
-              <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl text-center">
+              <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl text-center">
                 <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-600 mb-6">
                   <FiBarChart2 size={32} />
                 </div>
@@ -168,7 +171,7 @@ function PublicStats() {
     );
   }
 
-  const shortUrl = `${BASE_URL}/api/url/${stats.shortCode}`;
+  const shortUrl = `${REDIRECT_BASE_URL}/${stats.shortCode}`;
   const chartData = (stats.recentVisits || []).map((visit, index) => ({
     visit: `Visit ${index + 1}`,
     clicks: index + 1,
@@ -182,7 +185,7 @@ function PublicStats() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         
-        <main className="flex-1 overflow-y-auto flex flex-col bg-slate-50 dark:bg-[#020617]">
+        <main className="flex-1 overflow-y-auto flex flex-col pt-20 md:pt-0 bg-slate-50 dark:bg-[#020617]">
           <div className="flex-1 max-w-[1550px] w-full mx-auto px-6 py-6 space-y-6">
             
             {/* Hero */}
@@ -339,7 +342,7 @@ function PublicStats() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(stats.recentVisVisits || stats.recentVisVisits || stats.recentVisits || []).map((visit, index) => (
+                      {(stats.recentVisits || []).map((visit, index) => (
                         <tr
                           key={visit._id || index}
                           className="border-t border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition"
