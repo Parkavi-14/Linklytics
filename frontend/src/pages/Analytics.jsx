@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
@@ -42,16 +42,27 @@ function Analytics() {
   const tickColor = isDark ? "#94A3B8" : "#64748B"; // slate-400 vs slate-500
 
   useEffect(() => {
-    loadAnalytics();
+    if (id) {
+      loadAnalytics();
+    }
   }, [id]);
 
   const loadAnalytics = async () => {
     try {
       setLoading(true);
       const data = await getAnalytics(id);
-      setAnalytics(data);
+      
+      // ✨ THE CRITICAL FIX: Safe extraction layer checks both unwrapped object and nested structures cleanly
+      if (data && data.shortCode) {
+        setAnalytics(data); // Already unwrapped by API helper
+      } else if (data && data.data) {
+        setAnalytics(data.data); // Fallback for raw Axios payloads
+      } else {
+        setAnalytics(null);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Error reading analytics route context:", err);
+      setAnalytics(null);
     } finally {
       setLoading(false);
     }
@@ -69,10 +80,16 @@ function Analytics() {
 
   if (!analytics) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-slate-50 dark:bg-[#0B1120]">
+      <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 dark:bg-[#0B1120] p-6 text-center">
         <h2 className="text-3xl font-bold text-slate-700 dark:text-white">
           Analytics Not Found
         </h2>
+        <p className="mt-2 text-slate-400 text-sm max-w-xs">
+          Unable to pull metrics for this database ID record. Ensure your Render backend is live.
+        </p>
+        <Link to="/analytics" className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition">
+          Back to List
+        </Link>
       </div>
     );
   }
@@ -84,7 +101,6 @@ function Analytics() {
     clicks: index + 1,
   }));
 
-  // ✨ FIXED PRODUCTION ROUTE SUMMARY: Maps clean base shortcodes directly without doubling folders
   const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   const shortUrl = isLocalHost
     ? `http://localhost:5000/api/url/${analytics.shortCode}`
@@ -220,19 +236,17 @@ function Analytics() {
               </div>
             </div>
 
-            {/* Click Analytics */}
+            {/* Click Analytics Trend Chart */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                     Click Trend
                   </h2>
-
                   <p className="text-slate-500 dark:text-slate-400 mt-1">
                     Recent click activity over time
                   </p>
                 </div>
-
                 <div className="flex gap-2">
                   <span className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-sm font-medium">
                     Live
@@ -293,56 +307,13 @@ function Analytics() {
               </ResponsiveContainer>
             </div>
 
-            {/* Bottom Cards */}
-            <div className="grid xl:grid-cols-3 gap-5">
-              {/* Peak Performance */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-5">
-                <p className="text-slate-500 dark:text-slate-400">Peak Clicks</p>
-
-                <h2 className="text-3xl font-bold mt-3 text-indigo-600">
-                  {analytics.totalClicks || 0}
-                </h2>
-
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Total engagement
-                </p>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-5">
-                <p className="text-slate-500 dark:text-slate-400">
-                  Recent Activity
-                </p>
-
-                <h2 className="text-3xl font-bold mt-3 text-emerald-600">
-                  {recentVisits.length}
-                </h2>
-
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Latest visitors
-                </p>
-              </div>
-
-              {/* Status */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-5">
-                <p className="text-slate-500 dark:text-slate-400">Status</p>
-
-                <h2 className="text-3xl font-bold mt-3 text-green-600">Active</h2>
-
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Link is working normally
-                </p>
-              </div>
-            </div>
-
-            {/* Visit History */}
+            {/* Visit History Log Table */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                     Visit History
                   </h2>
-
                   <p className="text-slate-500 dark:text-slate-400 mt-1">
                     Complete list of recent visitors
                   </p>
@@ -352,7 +323,6 @@ function Analytics() {
                   <span className="font-semibold text-slate-900 dark:text-white">
                     {recentVisits.length}
                   </span>
-
                   <span className="ml-2 text-slate-500 dark:text-slate-400">
                     Records
                   </span>
@@ -365,11 +335,9 @@ function Analytics() {
                     size={48}
                     className="text-slate-300 dark:text-slate-700"
                   />
-
                   <h3 className="mt-5 text-2xl font-bold text-slate-700 dark:text-slate-300">
                     No Visits Yet
                   </h3>
-
                   <p className="mt-2 text-slate-500 dark:text-slate-400">
                     Visitor history will appear here.
                   </p>
@@ -382,15 +350,12 @@ function Analytics() {
                         <th className="text-left px-6 py-4 font-semibold text-slate-600 dark:text-slate-300">
                           #
                         </th>
-
                         <th className="text-left px-6 py-4 font-semibold text-slate-600 dark:text-slate-300">
                           Visit Time
                         </th>
-
                         <th className="text-left px-6 py-4 font-semibold text-slate-600 dark:text-slate-300">
                           IP Address
                         </th>
-
                         <th className="text-left px-6 py-4 font-semibold text-slate-600 dark:text-slate-300">
                           Browser
                         </th>
@@ -400,7 +365,7 @@ function Analytics() {
                     <tbody>
                       {recentVisits.map((visit, index) => (
                         <tr
-                          key={visit._id}
+                          key={visit._id || index}
                           className="border-t border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                         >
                           <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
@@ -419,12 +384,12 @@ function Analytics() {
 
                           <td className="px-6 py-4">
                             <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                              {visit.ip}
+                              {visit.ip || "0.0.0.0"}
                             </span>
                           </td>
 
                           <td className="px-6 py-4 text-slate-600 dark:text-slate-300 break-all">
-                            {visit.userAgent}
+                            {visit.userAgent || "Unknown User Agent"}
                           </td>
                         </tr>
                       ))}
