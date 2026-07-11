@@ -1,6 +1,9 @@
 const Url = require("../models/Url");
 const Visit = require("../models/Visit");
 
+// ==========================================
+// GET ANALYTICS FOR ONE URL
+// ==========================================
 exports.getAnalytics = async (req, res) => {
   try {
     const url = await Url.findById(req.params.id);
@@ -19,32 +22,30 @@ exports.getAnalytics = async (req, res) => {
       });
     }
 
-    // Fetch ALL visits
+    // Fetch all visits for this URL
     const visits = await Visit.find({
       url: url._id,
     }).sort({
       visitedAt: -1,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         _id: url._id,
         originalUrl: url.originalUrl,
         shortCode: url.shortCode,
-        totalClicks: visits.length,
+        totalClicks: url.totalClicks || visits.length || 0,
         lastVisited:
-          visits.length > 0
-            ? visits[0].visitedAt
-            : null,
+          url.lastVisited ||
+          (visits.length > 0 ? visits[0].visitedAt : null),
         createdAt: url.createdAt,
         recentVisits: visits,
       },
     });
   } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
+    console.error("Get Analytics Error:", err);
+    return res.status(500).json({
       success: false,
       message: err.message,
     });

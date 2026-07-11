@@ -3,7 +3,9 @@ const Visit = require("../models/Visit");
 const validator = require("validator");
 const generateShortCode = require("../utils/generateShortCode");
 
-// 1. Create Short URL
+// ==========================================
+// 1. CREATE SHORT URL
+// ==========================================
 exports.createShortUrl = async (req, res) => {
   try {
     let { originalUrl, customAlias } = req.body;
@@ -13,14 +15,23 @@ exports.createShortUrl = async (req, res) => {
     }
 
     if (!validator.isURL(originalUrl)) {
-      return res.status(400).json({ success: false, message: "Invalid URL" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid URL",
+      });
     }
 
-    let code = customAlias || generateShortCode();
+    const code = customAlias || generateShortCode();
 
-    const exists = await Url.findOne({ shortCode: code });
+    const exists = await Url.findOne({
+      shortCode: code,
+    });
+
     if (exists) {
-      return res.status(400).json({ success: false, message: "Short code already exists" });
+      return res.status(400).json({
+        success: false,
+        message: "Short code already exists",
+      });
     }
 
     const url = await Url.create({
@@ -30,75 +41,153 @@ exports.createShortUrl = async (req, res) => {
       customAlias: customAlias || null,
     });
 
-    res.status(201).json({ success: true, data: url });
+    return res.status(201).json({
+      success: true,
+      data: url,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Create Short URL Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-// 2. Get My URLs
+// ==========================================
+// 2. GET MY URLS
+// ==========================================
 exports.getMyUrls = async (req, res) => {
   try {
-    const urls = await Url.find({ user: req.user._id }).sort({ createdAt: -1 });
-    res.json({ success: true, count: urls.length, data: urls });
+    const urls = await Url.find({
+      user: req.user._id,
+    }).sort({
+      createdAt: -1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: urls.length,
+      data: urls,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Get My URLs Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-// 3. Delete URL
+// ==========================================
+// 3. DELETE URL
+// ==========================================
 exports.deleteUrl = async (req, res) => {
   try {
+    const url = await Url.findById(req.params.id);
+
+    if (!url) {
+      return res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
+    }
+
+    if (url.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     await Url.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "Deleted Successfully" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Deleted Successfully",
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Delete URL Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-// 4. Redirect URL
+// ==========================================
+// 4. REDIRECT URL
+// ==========================================
 exports.redirectUrl = async (req, res) => {
   try {
-    const url = await Url.findOne({ shortCode: req.params.code });
+    const url = await Url.findOne({
+      shortCode: req.params.code,
+    });
+
     if (!url) {
       return res.status(404).send("URL Not Found");
     }
 
-    url.totalClicks++;
+    // Safely increase click count
+    url.totalClicks = (url.totalClicks || 0) + 1;
+
+    // Save last visit date
     url.lastVisited = new Date();
+
     await url.save();
 
+    // Store visit information for analytics
     await Visit.create({
       url: url._id,
       ip: req.ip,
-      userAgent: req.headers["user-agent"],
+      userAgent: req.headers["user-agent"] || "Unknown",
     });
 
     return res.redirect(url.originalUrl);
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Redirect URL Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-// 5. Update URL
+// ==========================================
+// 5. UPDATE URL
+// ==========================================
 exports.updateUrl = async (req, res) => {
   try {
     const { originalUrl } = req.body;
     const url = await Url.findById(req.params.id);
 
     if (!url) {
-      return res.status(404).json({ success: false, message: "URL not found" });
+      return res.status(404).json({
+        success: false,
+        message: "URL not found",
+      });
     }
 
     if (url.user.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "Unauthorized" });
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
 
     url.originalUrl = originalUrl;
     await url.save();
 
-    res.json({ success: true, message: "URL updated successfully", data: url });
+    return res.status(200).json({
+      success: true,
+      message: "URL updated successfully",
+      data: url,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Update URL Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };

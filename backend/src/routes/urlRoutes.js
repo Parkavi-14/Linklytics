@@ -1,34 +1,40 @@
 const express = require("express");
 const router = express.Router();
-
-const { 
-    createShortUrl, 
-    getMyUrls, 
-    deleteUrl, 
-    redirectUrl, 
-    updateUrl 
+const {
+  createShortUrl,
+  getMyUrls,
+  deleteUrl,
+  redirectUrl,
+  updateUrl,
 } = require("../controllers/urlController");
 
 // Import protect directly since it uses module.exports = protect
 const protect = require("../middleware/authMiddleware");
 
-// Setup application routes
+// ==========================================
+// PUBLIC ROUTES (No Authorization Required)
+// ==========================================
 
-// 1. Create a short URL (Handles BOTH "/api/url/create" and "/api/url")
+// Public redirect route
+// Example: GET /api/url/JEx8eb2
+router.get("/:code", redirectUrl);
+
+// ==========================================
+// PROTECTED API ENDPOINTS (Token Required)
+// ==========================================
+
+// Create a short URL
 router.post("/create", protect, createShortUrl);
-router.post("/", protect, createShortUrl); // 👈 ADDED: Fixes the "Unable to create URL" 404 error!
+router.post("/", protect, createShortUrl);
 
-// 2. Fetch User URLs (Handles BOTH "/api/url/my-urls" and "/api/url")
+// Fetch User URLs
 router.get("/my-urls", protect, getMyUrls);
-router.get("/", protect, getMyUrls); 
+router.get("/", protect, getMyUrls);
 
-// 3. Update an existing URL target path (Protected)
+// Update an existing URL
 router.put("/update/:id", protect, updateUrl);
 
-// 4. Delete a short URL (Protected)
+// Delete a short URL
 router.delete("/delete/:id", protect, deleteUrl);
-
-// 5. Public dynamic routing parameter goes at the absolute bottom
-router.get("/:code", redirectUrl); 
 
 module.exports = router;

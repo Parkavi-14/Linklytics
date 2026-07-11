@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer"; // Imported the Footer component
+import Footer from "../components/layout/Footer";
 
 import WelcomeCard from "../components/dashboard/WelcomeCard";
 import RecentActivity from "../components/dashboard/RecentActivity";
@@ -19,7 +18,6 @@ function Dashboard() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const fetchUrls = async () => {
     try {
@@ -37,28 +35,13 @@ function Dashboard() {
     fetchUrls();
   }, []);
 
-  // Suggestions
-  const suggestions = useMemo(() => {
-    if (!search.trim()) return [];
-
-    return urls
-      .filter((url) =>
-        url.originalUrl
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      )
-      .slice(0, 5);
-  }, [search, urls]);
-
-  // Filter + Search
+  // Filter + Search Logic
   const filteredUrls = useMemo(() => {
     let data = [...urls];
 
     if (search.trim()) {
       data = data.filter((url) =>
-        url.originalUrl
-          .toLowerCase()
-          .includes(search.toLowerCase())
+        url.originalUrl.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -72,62 +55,42 @@ function Dashboard() {
 
     switch (sortBy) {
       case "oldest":
-        data.sort(
-          (a, b) =>
-            new Date(a.createdAt) -
-            new Date(b.createdAt)
-        );
+        data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         break;
-
       case "clicks":
-        data.sort(
-          (a, b) =>
-            b.totalClicks -
-            a.totalClicks
-        );
+        data.sort((a, b) => b.totalClicks - a.totalClicks);
         break;
-
       default:
-        data.sort(
-          (a, b) =>
-            new Date(b.createdAt) -
-            new Date(a.createdAt)
-        );
+        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     return data;
   }, [urls, search, filter, sortBy]);
 
-  const clearSearch = () => {
-    setSearch("");
-    setShowSuggestions(false);
-  };
-
-  const selectSuggestion = (url) => {
-    setSearch(url.originalUrl);
-    setShowSuggestions(false);
-  };
-
   return (
     <div className="h-screen bg-slate-100 dark:bg-slate-950 flex overflow-hidden transition-colors duration-300">
-      {/* Sidebar */}
+      {/* Sidebar Panel - Now automatically responsive */}
       <Sidebar urls={urls} />
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Content Area Wrapper Wrapper Layout */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         <Navbar />
 
-        <main className="flex-1 overflow-y-auto flex flex-col bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
-          <div className="flex-1 max-w-screen-2xl w-full mx-auto px-8 py-8">
-            {/* Welcome */}
+        {/* Added pt-20 on mobile viewports so that the main contents clear the 
+          floating mobile menu toggle trigger cleanly without structural layout collapses.
+        */}
+        <main className="flex-1 overflow-y-auto flex flex-col pt-20 md:pt-0 bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
+          <div className="flex-1 max-w-screen-2xl w-full mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
+            
+            {/* Welcome Greeting Element Block */}
             <WelcomeCard />
 
-            {/* URL Form */}
+            {/* URL Form Creation Panel Component */}
             <div className="mt-6">
               <UrlForm refreshUrls={fetchUrls} />
             </div>
 
-            {/* URL Table */}
+            {/* Core URL Data Table Grid View */}
             <div id="my-links" className="mt-6">
               <UrlTable
                 urls={filteredUrls}
@@ -136,14 +99,14 @@ function Dashboard() {
               />
             </div>
 
-            {/* Bottom */}
+            {/* Metrics Chart and Recent Logs Section */}
             <div className="grid xl:grid-cols-2 gap-6 mt-6">
               <RecentActivity urls={urls} />
               <ClicksChart urls={urls} />
             </div>
           </div>
 
-          {/* Integrated Footer at the bottom of the layout view context */}
+          {/* Persistent Footer Layout System */}
           <Footer />
         </main>
       </div>
