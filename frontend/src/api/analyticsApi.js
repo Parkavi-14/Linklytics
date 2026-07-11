@@ -1,13 +1,7 @@
 import axios from "axios";
 
-// ✨ DYNAMIC ROUTING FIX: Matches the same live production host context evaluation
-const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-const DETERMINED_BASE_URL = isLocal 
-  ? "http://localhost:5000/api" 
-  : "https://linklytics-4r2v.onrender.com/api";
-
 const API = axios.create({
-  baseURL: DETERMINED_BASE_URL,
+  baseURL: "http://localhost:5000/api",
 });
 
 API.interceptors.request.use((config) => {
