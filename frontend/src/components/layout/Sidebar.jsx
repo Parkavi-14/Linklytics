@@ -69,7 +69,7 @@ function Sidebar({ urls = [] }) {
       {/* Main Sidebar Panel Container */}
       <aside
         className={`
-          fixed md:sticky top-0 left-0 z-40 h-screen flex flex-col visible
+          fixed md:sticky top-0 left-0 z-40 h-screen flex flex-col
           bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
           text-slate-900 dark:text-white shadow-xl dark:shadow-2xl
           transition-all duration-300 ease-in-out
@@ -77,10 +77,10 @@ function Sidebar({ urls = [] }) {
           ${isOpen ? "w-64 translate-x-0" : "-translate-x-full md:translate-x-0 md:w-24"}
         `}
       >
-        {/* ✨ FIXED & PROMINENT DESKTOP ARROW TOGGLE HANDLE */}
+        {/* ✨ PROMINENT & OVERLAY-SAFE ARROW TOGGLE BUTTON */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="hidden md:flex absolute -right-5 top-8 z-50 w-10 h-10 rounded-full bg-blue-600 border-4 border-white dark:border-slate-900 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center cursor-pointer p-0"
+          className="hidden md:flex absolute -right-5 top-8 z-50 w-10 h-10 rounded-full bg-blue-600 border-4 border-white dark:border-slate-900 text-white shadow-xl hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center cursor-pointer p-0 select-none"
         >
           {isOpen ? (
             <FiChevronLeft size={20} className="shrink-0" />
@@ -89,7 +89,7 @@ function Sidebar({ urls = [] }) {
           )}
         </button>
 
-        {/* Inner Scroll Wrapper to separate overflow clipping from parent layout container */}
+        {/* Inner Scroll Content Container */}
         <div className="w-full h-full flex flex-col overflow-y-auto overflow-x-hidden scrollbar-none px-4 py-6">
           
           {/* Header/Logo Section */}
@@ -116,7 +116,7 @@ function Sidebar({ urls = [] }) {
 
           <hr className="border-slate-200 dark:border-slate-800 mb-6 mx-[-16px]" />
 
-          {/* Navigation Items Content Frame */}
+          {/* Navigation Items Content */}
           <div>
             <p className={`px-2 mb-4 text-xs font-semibold tracking-[0.25em] uppercase text-slate-400 dark:text-slate-500 transition-opacity duration-200 ${isOpen ? "opacity-100" : "opacity-0 h-0 overflow-hidden mb-0"}`}>
               Main Menu
@@ -132,7 +132,7 @@ function Sidebar({ urls = [] }) {
                   title={!isOpen ? item.name : ""}
                 >
                   {({ isActive }) => (
-                    <>
+                    <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-4 overflow-hidden">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition shrink-0 ${isActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
                           {item.icon}
@@ -142,14 +142,14 @@ function Sidebar({ urls = [] }) {
                       {isOpen && (
                         <FiChevronRight className={`transition-transform ${isActive ? "translate-x-1" : "group-hover:translate-x-1 text-slate-400 dark:text-slate-500"}`} />
                       )}
-                    </>
+                    </div>
                   )}
                 </NavLink>
               ))}
             </div>
           </div>
 
-          {/* Stats Workspace Cards Module */}
+          {/* Workspace Analytics Metrics Overview */}
           <div className={`transition-all duration-300 ${isOpen ? "mt-8 opacity-100 max-h-screen visible" : "mt-0 opacity-0 max-h-0 overflow-hidden pointer-events-none invisible"}`}>
             <p className="px-2 mb-4 text-xs font-semibold tracking-[0.25em] uppercase text-slate-400 dark:text-slate-500">
               Workspace
@@ -194,7 +194,7 @@ function Sidebar({ urls = [] }) {
             </div>
           </div>
 
-          {/* ✨ LOGOUT CONTAINER FIX: strictly rendered only when open */}
+          {/* Conditional Logout Action */}
           {isOpen && (
             <div className="mt-auto pt-6">
               <button
@@ -207,7 +207,7 @@ function Sidebar({ urls = [] }) {
             </div>
           )}
 
-          {/* Footer branding metadata notes */}
+          {/* Footer branding metadata */}
           <div className={`text-center transition-all duration-300 ${isOpen ? "mt-5 opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden mt-0 pointer-events-none"}`}>
             <p className="text-xs text-slate-400 dark:text-slate-500">Linklytics v2.0</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-600 mt-1 whitespace-nowrap">Professional URL Management</p>
