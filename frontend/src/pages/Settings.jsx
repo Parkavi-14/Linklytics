@@ -27,10 +27,11 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 import { getMyUrls } from "../api/urlApi";
+import { deleteMyAccount } from "../api/userApi"; 
 import toast from "react-hot-toast";
 
 function Settings() {
-  const { user, logout } = useAuth(); // Added logout option to safely redirect after account deletion
+  const { user, logout } = useAuth(); 
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -38,6 +39,7 @@ function Settings() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [notifications, setNotifications] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); 
 
   useEffect(() => {
     loadUrls();
@@ -63,8 +65,8 @@ function Settings() {
     toast.success("Password update logic placeholder executed.");
   };
 
-  // New deletion handler linked to the button below
-  const handleDeleteAccount = () => {
+  // ✨ FULL ACCOUNT DELETION LOGIC (Matches your pop-up)
+  const handleDeleteAccount = async () => {
     const confirmFirst = window.confirm(
       "Are you absolutely sure you want to delete your account? This will permanently wipe all your shortened links and tracking analytics history data."
     );
@@ -75,9 +77,26 @@ function Settings() {
       );
 
       if (confirmSecond) {
-        toast.success("Account securely deleted successfully.");
-        logout();
-        navigate("/");
+        try {
+          setIsDeleting(true); 
+
+          // 1. Fire Backend delete request
+          await deleteMyAccount(); 
+          
+          toast.success("Account data securely destroyed successfully.");
+          
+          // 2. Log user out locally (Clears tokens)
+          logout(); 
+          
+          // 3. Bounce back to root login page
+          navigate("/"); 
+
+        } catch (err) {
+          console.error("Account deletion context error:", err);
+          toast.error(err.response?.data?.message || "Failed to destroy account data.");
+        } finally {
+          setIsDeleting(false); 
+        }
       }
     }
   };
@@ -98,8 +117,12 @@ function Settings() {
 
         <main className="flex-1 overflow-y-auto flex flex-col bg-slate-50 dark:bg-[#020617]">
           <div className="flex-1 max-w-[1550px] w-full mx-auto px-6 py-6 space-y-6">
+            
             {/* Header */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-7">
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                Account Settings
+              </h1>
               <p className="text-slate-500 dark:text-slate-400 mt-2">
                 Manage your account, appearance and security settings.
               </p>
@@ -108,9 +131,9 @@ function Settings() {
             <div className="grid xl:grid-cols-3 gap-6">
               {/* Left Column */}
               <div className="space-y-6">
-                {/* Profile */}
+                {/* Profile Card */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-7 text-center shadow-md">
-                  <div className="w-24 h-24 mx-auto rounded-full bg-linear-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl">
+                  <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl">
                     <FiUser size={42} className="text-white" />
                   </div>
 
@@ -127,7 +150,7 @@ function Settings() {
                   </span>
                 </div>
 
-                {/* Statistics */}
+                {/* Statistics Box */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-md">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                     Account Statistics
@@ -139,12 +162,10 @@ function Settings() {
                         <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
                           <FiLink className="text-blue-500" />
                         </div>
-
                         <span className="text-slate-600 dark:text-slate-300">
                           Total Links
                         </span>
                       </div>
-
                       <span className="text-slate-900 dark:text-white text-xl font-bold">
                         {totalLinks}
                       </span>
@@ -155,12 +176,10 @@ function Settings() {
                         <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                           <FiMousePointer className="text-green-500" />
                         </div>
-
                         <span className="text-slate-600 dark:text-slate-300">
                           Total Clicks
                         </span>
                       </div>
-
                       <span className="text-slate-900 dark:text-white text-xl font-bold">
                         {totalClicks}
                       </span>
@@ -171,12 +190,10 @@ function Settings() {
                         <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                           <FiCheckCircle className="text-emerald-500" />
                         </div>
-
                         <span className="text-slate-600 dark:text-slate-300">
                           Active Links
                         </span>
                       </div>
-
                       <span className="text-slate-900 dark:text-white text-xl font-bold">
                         {activeLinks}
                       </span>
@@ -184,7 +201,7 @@ function Settings() {
                   </div>
                 </div>
 
-                {/* Appearance */}
+                {/* Appearance Theme Selector */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-md">
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">
                     Appearance
@@ -192,21 +209,9 @@ function Settings() {
 
                   <div className="space-y-3">
                     {[
-                      {
-                        id: "light",
-                        icon: <FiSun />,
-                        label: "Light Mode",
-                      },
-                      {
-                        id: "dark",
-                        icon: <FiMoon />,
-                        label: "Dark Mode",
-                      },
-                      {
-                        id: "system",
-                        icon: <FiMonitor />,
-                        label: "System Default",
-                      },
+                      { id: "light", icon: <FiSun />, label: "Light Mode" },
+                      { id: "dark", icon: <FiMoon />, label: "Dark Mode" },
+                      { id: "system", icon: <FiMonitor />, label: "System Default" },
                     ].map((item) => (
                       <button
                         key={item.id}
@@ -239,18 +244,16 @@ function Settings() {
 
               {/* Right Column */}
               <div className="xl:col-span-2 space-y-6">
-                {/* Security Card */}
+                {/* Security Setup Panel */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-7 shadow-md">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-12 h-12 rounded-xl bg-blue-600/10 flex items-center justify-center">
                       <FiShield className="text-blue-500" size={24} />
                     </div>
-
                     <div>
                       <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                         Security Settings
                       </h2>
-
                       <p className="text-slate-500 dark:text-slate-400 mt-1">
                         Update your login credentials.
                       </p>
@@ -258,112 +261,49 @@ function Settings() {
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Email */}
                     <div>
                       <label className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium mb-2">
                         <FiMail />
                         Email Address
                       </label>
-
                       <input
                         disabled
                         value={user?.email || ""}
-                        className="
-                          w-full
-                          rounded-xl
-                          bg-slate-100
-                          dark:bg-slate-800
-                          border
-                          border-slate-200
-                          dark:border-slate-700
-                          px-4
-                          py-3
-                          text-slate-400
-                          dark:text-slate-500
-                          cursor-not-allowed
-                        "
+                        className="w-full rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 text-slate-400 dark:text-slate-500 cursor-not-allowed"
                       />
                     </div>
 
-                    {/* Password */}
                     <div>
                       <label className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium mb-2">
                         <FiLock />
                         New Password
                       </label>
-
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Enter new password"
-                        className="
-                          w-full
-                          rounded-xl
-                          bg-slate-50
-                          dark:bg-slate-800
-                          border
-                          border-slate-200
-                          dark:border-slate-700
-                          px-4
-                          py-3
-                          text-slate-900
-                          dark:text-white
-                          placeholder:text-slate-400
-                          dark:placeholder:text-slate-500
-                          focus:outline-none
-                          focus:border-blue-600
-                        "
+                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-600"
                       />
                     </div>
 
-                    {/* Confirm */}
                     <div>
                       <label className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium mb-2">
                         <FiLock />
                         Confirm Password
                       </label>
-
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm password"
-                        className="
-                          w-full
-                          rounded-xl
-                          bg-slate-50
-                          dark:bg-slate-800
-                          border
-                          border-slate-200
-                          dark:border-slate-700
-                          px-4
-                          py-3
-                          text-slate-900
-                          dark:text-white
-                          placeholder:text-slate-400
-                          dark:placeholder:text-slate-500
-                          focus:outline-none
-                          focus:border-blue-600
-                        "
+                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-600"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="
-                        px-8
-                        py-3
-                        rounded-xl
-                        bg-blue-600
-                        hover:bg-blue-700
-                        transition
-                        text-white
-                        font-semibold
-                        flex
-                        items-center
-                        gap-3
-                      "
+                      className="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 transition text-white font-semibold flex items-center gap-3"
                     >
                       <FiSave />
                       Save Changes
@@ -371,7 +311,7 @@ function Settings() {
                   </form>
                 </div>
 
-                {/* Account Information */}
+                {/* Account Metadata Information Details */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-7 shadow-md">
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
                     Account Information
@@ -381,12 +321,10 @@ function Settings() {
                     <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-5">
                       <div className="flex items-center gap-3 mb-2">
                         <FiCalendar className="text-blue-500" />
-
                         <span className="text-slate-500 dark:text-slate-400">
                           Member Since
                         </span>
                       </div>
-
                       <p className="text-slate-900 dark:text-white font-semibold">
                         {user?.createdAt
                           ? new Date(user.createdAt).toLocaleDateString()
@@ -397,12 +335,10 @@ function Settings() {
                     <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-5">
                       <div className="flex items-center gap-3 mb-2">
                         <FiCheckCircle className="text-emerald-500" />
-
                         <span className="text-slate-500 dark:text-slate-400">
                           Account Status
                         </span>
                       </div>
-
                       <p className="text-emerald-600 dark:text-emerald-400 font-semibold">
                         Active
                       </p>
@@ -411,12 +347,10 @@ function Settings() {
                     <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-5">
                       <div className="flex items-center gap-3 mb-2">
                         <FiShield className="text-violet-500" />
-
                         <span className="text-slate-500 dark:text-slate-400">
                           Subscription
                         </span>
                       </div>
-
                       <p className="text-slate-900 dark:text-white font-semibold">
                         {user?.plan || "Free Plan"}
                       </p>
@@ -425,12 +359,10 @@ function Settings() {
                     <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-transparent rounded-xl p-5">
                       <div className="flex items-center gap-3 mb-2">
                         <FiBell className="text-yellow-500" />
-
                         <span className="text-slate-500 dark:text-slate-400">
                           Notifications
                         </span>
                       </div>
-
                       <p className="text-slate-900 dark:text-white font-semibold">
                         {notifications ? "Enabled" : "Disabled"}
                       </p>
@@ -438,7 +370,7 @@ function Settings() {
                   </div>
                 </div>
 
-                {/* Notifications */}
+                {/* Notification Toggle Strip */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-7 shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
@@ -446,8 +378,7 @@ function Settings() {
                         <FiBell className="text-yellow-500" />
                         Notifications
                       </h2>
-
-                      <p className="text-slate-500 dark:text-slate-400 mt-2">
+                      <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
                         Receive email notifications for new clicks, analytics updates and important account activity.
                       </p>
                     </div>
@@ -467,7 +398,7 @@ function Settings() {
                   </div>
                 </div>
 
-                {/* Danger Zone */}
+                {/* Danger Zone Block */}
                 <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-7 shadow-md">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div>
@@ -475,8 +406,7 @@ function Settings() {
                         <FiAlertTriangle />
                         Danger Zone
                       </h2>
-
-                      <p className="mt-3 text-slate-600 dark:text-slate-400 max-w-xl">
+                      <p className="mt-3 text-slate-600 dark:text-slate-400 max-w-xl text-sm">
                         Permanently delete your account, URLs, analytics history and settings.
                         <br />
                         <span className="text-red-600 dark:text-red-400 font-medium">
@@ -486,27 +416,31 @@ function Settings() {
                     </div>
 
                     <button
-                      onClick={handleDeleteAccount} // Connected click handler safely here
-                      className="
-                        px-7
-                        py-3
-                        rounded-xl
-                        bg-red-600
-                        hover:bg-red-700
-                        text-white
-                        font-semibold
-                        flex
-                        items-center
-                        justify-center
-                        gap-3
-                        transition
-                      "
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting} 
+                      className={`
+                        px-7 py-3 rounded-xl font-semibold flex items-center justify-center gap-3 transition
+                        ${isDeleting 
+                          ? "bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed" 
+                          : "bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-500/10" 
+                        }
+                      `}
                     >
-                      <FiTrash2 />
-                      Delete Account
+                      {isDeleting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Destroying...
+                        </>
+                      ) : (
+                        <>
+                          <FiTrash2 />
+                          Delete Account
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
+
               </div>
             </div>
           </div>
