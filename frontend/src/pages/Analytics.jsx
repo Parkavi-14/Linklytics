@@ -84,11 +84,6 @@ function Analytics() {
     clicks: index + 1,
   }));
 
-  // ✨ PRODUCTION URL SYNC: Enforces public namespaced redirection paths to avoid collisions
-  const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const shortUrl = isLocalHost
-    ? `http://localhost:5000/api/url/r/${analytics.shortCode}`
-    : `https://linklytics-4r2v.onrender.com/api/url/r/${analytics.shortCode}`;
 
   return (
     <div className="h-screen flex bg-slate-50 dark:bg-[#0B1120] overflow-hidden">
