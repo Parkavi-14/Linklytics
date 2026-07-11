@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer"; // Imported the Footer component
+import Footer from "../components/layout/Footer"; 
 
 // Import your ThemeContext to detect current theme state
 import { ThemeContext } from "../context/ThemeContext";
@@ -84,9 +84,11 @@ function Analytics() {
     clicks: index + 1,
   }));
 
-  const shortUrl = `${
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"
-  }/api/url/${analytics.shortCode}`;
+  // ✨ PRODUCTION URL SYNC: Enforces public namespaced redirection paths to avoid collisions
+  const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const shortUrl = isLocalHost
+    ? `http://localhost:5000/api/url/r/${analytics.shortCode}`
+    : `https://linklytics-4r2v.onrender.com/api/url/r/${analytics.shortCode}`;
 
   return (
     <div className="h-screen flex bg-slate-50 dark:bg-[#0B1120] overflow-hidden">
@@ -97,7 +99,7 @@ function Analytics() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
 
-        <main className="flex-1 overflow-y-auto flex flex-col bg-slate-50 dark:bg-[#0B1120]">
+        <main className="flex-1 overflow-y-auto flex flex-col pt-20 md:pt-0 bg-slate-50 dark:bg-[#0B1120]">
           <div className="flex-1 max-w-[1550px] w-full mx-auto px-6 py-5 space-y-5">
             {/* Hero */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md px-8 py-7">
@@ -253,7 +255,6 @@ function Analytics() {
                         stopColor="#2563EB"
                         stopOpacity={0.35}
                       />
-
                       <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -404,10 +405,10 @@ function Analytics() {
                         >
                           <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                             {index + 1}
-          </td>
+                          </td>
 
                           <td className="px-6 py-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            {new Date(visit.visitedAt).toLocaleString("en-IN", {
+                            {new Date(visit.visitedAt || visit.createdAt).toLocaleString("en-IN", {
                               day: "2-digit",
                               month: "short",
                               year: "numeric",
@@ -433,7 +434,7 @@ function Analytics() {
               )}
             </div>
           </div>
-          <Footer /> {/* Integrated the Footer at the bottom of the layout inner container scroll wrapper */}
+          <Footer />
         </main>
       </div>
     </div>

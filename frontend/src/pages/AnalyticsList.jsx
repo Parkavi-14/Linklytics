@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 import Sidebar from "../components/layout/Sidebar";
 import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer"; // Imported the Footer component
+import Footer from "../components/layout/Footer"; 
 
 // Import your custom theme hook
 import { useTheme } from "../context/ThemeContext";
@@ -30,8 +30,11 @@ function AnalyticsList() {
   // Consume the global theme context state
   const { theme } = useTheme();
 
-  const BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  // ✨ PRODUCTION URL SYNC: Maps to short link redirection paths correctly
+  const isLocalHost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const BASE_URL = isLocalHost
+    ? "http://localhost:5000/api/url/r"
+    : "https://linklytics-4r2v.onrender.com/api/url/r";
 
   const fetchUrls = async () => {
     try {
@@ -94,7 +97,7 @@ function AnalyticsList() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
 
-        <main className="flex-1 overflow-y-auto flex flex-col bg-slate-50 dark:bg-[#020617]">
+        <main className="flex-1 overflow-y-auto flex flex-col pt-20 md:pt-0 bg-slate-50 dark:bg-[#020617]">
           <div className="flex-1 max-w-[1550px] w-full mx-auto px-6 py-6 space-y-6">
             {/* Header */}
             <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-lg p-7">
@@ -369,7 +372,7 @@ function AnalyticsList() {
 
                           <td className="px-6">
                             <a
-                              href={`${BASE_URL}/api/url/${url.shortCode}`}
+                              href={`${BASE_URL}/${url.shortCode}`}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
@@ -418,7 +421,7 @@ function AnalyticsList() {
               </div>
             </section>
           </div>
-          <Footer /> {/* Integrated the Footer at the bottom of the canvas content frame layout */}
+          <Footer />
         </main>
       </div>
     </div>
