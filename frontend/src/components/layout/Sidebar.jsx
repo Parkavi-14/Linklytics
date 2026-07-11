@@ -20,6 +20,8 @@ import { useAuth } from "../../context/AuthContext";
 function Sidebar({ urls = [] }) {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  
+  // ✨ STATE ADJUSTMENT: Default is closed (false) for clean, flexible toggle handling
   const [isOpen, setIsOpen] = useState(false);
 
   const totalLinks = urls.length;
@@ -64,40 +66,47 @@ function Sidebar({ urls = [] }) {
         />
       )}
 
-      {/* Main Sidebar Panel */}
+      {/* Main Sidebar Panel Container */}
       <aside
         className={`
-          fixed md:sticky top-0 left-0 z-40 w-64 h-screen flex flex-col
+          fixed md:sticky top-0 left-0 z-40 h-screen flex flex-col
           bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
           text-slate-900 dark:text-white shadow-xl dark:shadow-2xl
-          transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          transition-all duration-300 ease-in-out
+          
+          /* 📱 Smartphone Adaptive sizing limits */
+          max-w-[280px] sm:max-w-xs
+          
+          /* 💻 Width adjustments based on state toggle variables */
+          ${isOpen ? "w-64 translate-x-0" : "-translate-x-full md:translate-x-0 md:w-24"}
         `}
       >
         {/* Header/Logo Section */}
-        <div className="px-6 pt-7 pb-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+        <div className={`px-6 pt-7 pb-6 border-b border-slate-200 dark:border-slate-800 flex items-center transition-all duration-300 ${isOpen ? "justify-between" : "justify-center"}`}>
+          <div className="flex items-center gap-4 overflow-hidden">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
               <FiLink size={22} className="text-white" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Linklytics</h1>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">URL Management</p>
+            
+            {/* Hides metadata if the layout drawer is collapsed */}
+            <div className={`transition-all duration-300 ${isOpen ? "opacity-100 max-w-xs" : "opacity-0 max-w-0 pointer-events-none"}`}>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Linklytics</h1>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 whitespace-nowrap">URL Management</p>
             </div>
           </div>
 
-          {/* Mobile Collapse Arrow */}
+          {/* Flexible Open/Close Toggle Arrow Icon Trigger */}
           <button 
-            onClick={() => setIsOpen(false)}
-            className="md:hidden p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+            onClick={() => setIsOpen(!isOpen)}
+            className={`p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 ${!isOpen ? "hidden md:flex absolute -right-3 top-9 bg-white dark:bg-slate-900 shadow-md z-50" : ""}`}
           >
-            <FiChevronLeft size={18} />
+            {isOpen ? <FiChevronLeft size={18} /> : <FiChevronRight size={18} />}
           </button>
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <p className="px-2 mb-4 text-xs font-semibold tracking-[0.25em] uppercase text-slate-400 dark:text-slate-500">
+        <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-none">
+          <p className={`px-2 mb-4 text-xs font-semibold tracking-[0.25em] uppercase text-slate-400 dark:text-slate-500 transition-opacity duration-200 ${isOpen ? "opacity-100" : "opacity-0 h-0 overflow-hidden mb-0"}`}>
             Main Menu
           </p>
 
@@ -107,17 +116,20 @@ function Sidebar({ urls = [] }) {
                 key={item.path} 
                 to={item.path} 
                 className={menuClass}
-                onClick={() => setIsOpen(false)}
+                onClick={() => { if(window.innerWidth < 768) setIsOpen(false); }}
+                title={!isOpen ? item.name : ""}
               >
                 {({ isActive }) => (
                   <>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${isActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition shrink-0 ${isActive ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
                         {item.icon}
                       </div>
-                      <span className="font-medium text-[15px]">{item.name}</span>
+                      <span className={`font-medium text-[15px] transition-all duration-300 ${isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none w-0"}`}>{item.name}</span>
                     </div>
-                    <FiChevronRight className={`transition-transform ${isActive ? "translate-x-1" : "group-hover:translate-x-1 text-slate-400 dark:text-slate-500"}`} />
+                    {isOpen && (
+                      <FiChevronRight className={`transition-transform ${isActive ? "translate-x-1" : "group-hover:translate-x-1 text-slate-400 dark:text-slate-500"}`} />
+                    )}
                   </>
                 )}
               </NavLink>
@@ -125,7 +137,7 @@ function Sidebar({ urls = [] }) {
           </div>
 
           {/* Stats Analytics Overview Workspace */}
-          <div className="mt-8">
+          <div className={`transition-all duration-300 ${isOpen ? "mt-8 opacity-100 max-h-screen" : "mt-0 opacity-0 max-h-0 overflow-hidden pointer-events-none"}`}>
             <p className="px-2 mb-4 text-xs font-semibold tracking-[0.25em] uppercase text-slate-400 dark:text-slate-500">
               Workspace
             </p>
@@ -172,16 +184,17 @@ function Sidebar({ urls = [] }) {
           {/* Action Log Out */}
           <button
             onClick={handleLogout}
-            className="mt-6 w-full flex items-center justify-center gap-3 rounded-2xl border border-red-500/20 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-600 dark:hover:bg-red-500 hover:text-white hover:border-red-600 dark:hover:border-red-500 transition-all duration-300"
+            title={!isOpen ? "Logout" : ""}
+            className="mt-6 w-full flex items-center justify-center gap-3 rounded-2xl border border-red-500/20 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 py-3 text-red-600 dark:text-red-400 hover:bg-red-600 dark:hover:bg-red-500 hover:text-white hover:border-red-600 dark:hover:border-red-500 transition-all duration-300"
           >
-            <FiLogOut size={18} />
-            <span className="font-medium">Logout</span>
+            <FiLogOut size={18} className="shrink-0" />
+            <span className={`font-medium transition-all duration-300 ${isOpen ? "opacity-100 w-auto" : "opacity-0 w-0 h-0 overflow-hidden"}`}>Logout</span>
           </button>
 
-          {/* Footer Footprint metadata */}
-          <div className="mt-5 text-center">
+          {/* Footer Metadata */}
+          <div className={`mt-5 text-center transition-all duration-300 ${isOpen ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden"}`}>
             <p className="text-xs text-slate-400 dark:text-slate-500">Linklytics v2.0</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-600 mt-1">Professional URL Management</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-600 mt-1 whitespace-nowrap">Professional URL Management</p>
           </div>
         </div>
       </aside>
