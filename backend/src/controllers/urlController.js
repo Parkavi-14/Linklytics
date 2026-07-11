@@ -1,8 +1,3 @@
-const Url = require("../models/Url");
-const Visit = require("../models/Visit");
-const validator = require("validator");
-const generateShortCode = require("../utils/generateShortCode");
-
 // ==========================================
 // 1. CREATE SHORT URL
 // ==========================================
